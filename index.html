@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Mis Finanzas"/>
+<meta name="application-name" content="Mis Finanzas"/>
+<meta name="theme-color" content="#0b6350"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<title>Mis Finanzas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#f5f4f0;--surface:#fff;--surface2:#eeecea;--border:#e0dbd5;
+  --text:#1a1917;--text2:#6b6760;--text3:#a09c97;
+  --green:#1e6b3e;--green-bg:#e8f5ee;--green-light:#5DCAA5;
+  --red:#a8291f;--red-bg:#fdf0ef;
+  --blue:#1a5fa8;--blue-bg:#eaf2fd;
+  --amber:#7a4a00;--amber-bg:#fff3dc;
+  --teal:#0b6350;--teal-bg:#e0f4ef;
+  --purple:#5b3fa0;--purple-bg:#f0ecff;
+  --r:8px;--rl:12px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.1);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#111111;--surface:#1c1c1c;--surface2:#252525;--border:#333333;
+  --text:#f0f0f0;--text2:#999999;--text3:#666666;
+  --green:#5DCAA5;--green-bg:#0a2e1e;
+  --red:#F09595;--red-bg:#2e1212;
+  --blue:#6baef0;--blue-bg:#0d2340;
+  --amber:#EF9F27;--amber-bg:#2e1e00;
+  --teal:#5DCAA5;--teal-bg:#0a2e1e;
+  --purple:#b49aff;--purple-bg:#1e1540;
+}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent;transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+
+/* ── AUTH ── */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;background:var(--bg)}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:380px;box-shadow:var(--sh-md)}
+.auth-logo{width:52px;height:52px;background:var(--teal);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:26px}
+.auth-title{text-align:center;font-size:22px;font-weight:700;margin-bottom:.3rem}
+.auth-sub{text-align:center;font-size:14px;color:var(--text2);margin-bottom:1.75rem}
+.auth-tabs{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1.5rem}
+.auth-tab{flex:1;padding:9px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
+.auth-tab.active{background:var(--surface);color:var(--text);box-shadow:var(--sh)}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.fg label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.fg input{height:40px;border:1px solid var(--border);border-radius:var(--r);padding:0 12px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .15s;width:100%}
+.fg input:focus{border-color:var(--teal)}
+.btn-main{width:100%;height:42px;border:none;border-radius:var(--r);background:var(--teal);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:opacity .15s}
+.btn-main:hover{opacity:.9}.btn-main:disabled{opacity:.5;cursor:not-allowed}
+.auth-msg{font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+.auth-msg.err{color:var(--red)}.auth-msg.ok{color:var(--green)}
+.auth-link{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text2);cursor:pointer;text-decoration:underline;margin-top:8px;display:block;width:100%;text-align:center}
+.auth-link:hover{color:var(--teal)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem;width:100%;max-width:420px;box-shadow:var(--sh-md)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);line-height:1}
+.modal-close:hover{color:var(--red)}
+
+/* ── BUSCADOR ── */
+.search-wrap{position:relative;margin-bottom:1rem}
+.search-input{width:100%;height:38px;border:1px solid var(--border);border-radius:var(--r);padding:0 12px 0 36px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
+.search-input:focus{border-color:var(--teal)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none}
+.search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;display:none}
+
+/* ── COMPARACIÓN ── */
+.comp-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:8px}
+.comp-up{background:#fdf0ef;color:#a8291f}
+.comp-down{background:#e8f5ee;color:#1e6b3e}
+.comp-same{background:var(--surface2);color:var(--text2)}
+
+/* ── GASTOS FIJOS ── */
+.fijo-badge{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--amber-bg);color:var(--amber);margin-left:4px}
+.mes-cerrado-banner{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mes-cerrado-txt{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.btn-abrir-mes{background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--green);cursor:pointer;white-space:nowrap}
+
+/* ── TARJETAS CRÉDITO ── */
+.tc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem}
+.tc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1rem;box-shadow:var(--sh);position:relative;overflow:hidden;cursor:pointer;transition:box-shadow .15s}
+.tc-card:hover{box-shadow:var(--sh-md)}
+.tc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.tc-card.vence-hoy::before,.tc-card.vence-pronto::before{background:var(--red)}
+.tc-card.ok::before{background:var(--green-light)}
+.tc-card.pagada::before{background:var(--green)}
+.tc-nombre{font-size:15px;font-weight:700;margin-bottom:2px}
+.tc-banco{font-size:11px;color:var(--text2);margin-bottom:10px}
+.tc-monto{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--red)}
+.tc-monto.pagada{color:var(--green)}
+.tc-vence{font-size:11px;color:var(--text2);margin-top:4px}
+.tc-vence.urgente{color:var(--red);font-weight:600}
+.tc-status{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:6px}
+.tc-status.pendiente{background:var(--red-bg);color:var(--red)}
+.tc-status.pagada{background:var(--green-bg);color:var(--green)}
+.tc-status.vence-hoy{background:var(--red-bg);color:var(--red)}
+.tc-actions{display:flex;gap:6px;margin-top:10px}
+.tc-btn{flex:1;height:30px;border:none;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.tc-btn:hover{opacity:.85}
+.tc-btn.pagar{background:var(--green);color:#fff}
+.tc-btn.edit{background:var(--surface2);border:1px solid var(--border);color:var(--text2)}
+.tc-btn.del{background:var(--red-bg);color:var(--red)}
+.tc-empty{text-align:center;padding:2rem;color:var(--text3);font-size:13px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
+.btn-cancel{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text2);cursor:pointer}
+.btn-save{background:var(--teal);border:none;border-radius:var(--r);padding:8px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s}
+.btn-save:hover{opacity:.88}.btn-save:disabled{opacity:.5;cursor:not-allowed}
+.btn-save.red{background:var(--red)}
+
+/* ── APP SHELL ── */
+.app{display:none}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.25rem;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700}
+.brand-dot{width:32px;height:32px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px}
+.topbar-r{display:flex;align-items:center;gap:8px}
+.user-pill{font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-sm{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-sm:hover{background:var(--border);color:var(--text)}
+
+/* ── TABS ── */
+.tabs-wrap{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.25rem;display:flex;gap:0}
+.tab-btn{padding:12px 18px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal)}
+
+.main{max-width:960px;margin:0 auto;padding:1.25rem 1rem 3rem}
+
+/* ── MES NAV ── */
+.mes-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+.mes-bar h2{font-size:20px;font-weight:700}
+.mes-btns{display:flex;align-items:center;gap:6px}
+.mes-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);width:32px;height:32px;cursor:pointer;color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.mes-btn:hover{background:var(--surface2)}
+.mes-lbl{font-size:14px;font-weight:600;min-width:130px;text-align:center}
+
+/* ── METRIC CARDS ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:.9rem 1rem;box-shadow:var(--sh);position:relative;overflow:hidden}
+.mc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--rl) var(--rl) 0 0}
+.mc.m-green::before{background:var(--green-light)}
+.mc.m-red::before{background:var(--red)}
+.mc.m-blue::before{background:var(--blue)}
+.mc.m-amber::before{background:#EF9F27}
+.mc-lbl{font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.mc-val{font-size:22px;font-weight:700;letter-spacing:-.5px;font-family:'DM Mono',monospace}
+.mc-val.green{color:var(--green)}.mc-val.red{color:var(--red)}.mc-val.blue{color:var(--blue)}.mc-val.amber{color:var(--amber)}.mc-val.teal{color:var(--teal)}.mc-val.gray{color:var(--text2)}
+.mc-sub{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* ── SECTION ── */
+.section-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.section-title span{font-weight:400;color:var(--text3);font-size:13px}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-right:4px}
+.tag-green{background:var(--green-bg);color:var(--green)}
+.tag-red{background:var(--red-bg);color:var(--red)}
+.tag-blue{background:var(--blue-bg);color:var(--blue)}
+.tag-amber{background:var(--amber-bg);color:var(--amber)}
+.tag-purple{background:var(--purple-bg);color:var(--purple)}
+
+/* ── ADD FORM ── */
+.add-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1.25rem;box-shadow:var(--sh)}
+.add-form-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px}
+.form-row{display:grid;gap:8px;align-items:end}
+.form-row.cols4{grid-template-columns:2fr 1fr 1fr auto}
+.form-row.cols3{grid-template-columns:2fr 1fr auto}
+.form-row.cols5{grid-template-columns:1.5fr 1fr 1fr 1fr auto}
+.fgl{display:flex;flex-direction:column;gap:3px}
+.fgl label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.fgl input,.fgl select{height:36px;border:1px solid var(--border);border-radius:var(--r);padding:0 9px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%;transition:border-color .15s}
+.fgl input:focus,.fgl select:focus{border-color:var(--teal)}
+.fgl input.err{border-color:var(--red)!important}
+.btn-add{height:36px;padding:0 14px;border:none;border-radius:var(--r);background:var(--teal);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.btn-add:hover{opacity:.88}.btn-add:disabled{opacity:.5;cursor:not-allowed}
+.btn-add.red{background:var(--red)}
+.btn-add.blue{background:var(--blue)}
+.btn-add.amber{background:#b87800}
+
+/* ── ITEMS LIST ── */
+.items-list{display:flex;flex-direction:column;gap:5px;margin-bottom:1.25rem}
+.item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;animation:si .2s ease;transition:background .1s}
+.item:hover{background:var(--surface2)}
+@keyframes si{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.item-ico{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{font-size:11px;color:var(--text2);margin-top:1px}
+.item-amt{font-size:14px;font-weight:700;flex-shrink:0;font-family:'DM Mono',monospace}
+.item-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:4px;border-radius:6px;flex-shrink:0;transition:all .15s}
+.item-del:hover{color:var(--red);background:var(--red-bg)}
+
+.empty{text-align:center;padding:2rem;color:var(--text3);font-size:13px}
+
+/* ── RESUMEN VISUAL ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.25rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.1rem;box-shadow:var(--sh)}
+.card-title{font-size:13px;font-weight:700;margin-bottom:1rem;color:var(--text)}
+.chart-wrap{position:relative;height:190px}
+
+/* ── AHORROS ── */
+.ahorros-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.ahorro-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:.9rem 1rem;box-shadow:var(--sh)}
+.ahorro-lbl{font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.ahorro-val{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--purple)}
+.ahorro-input-row{display:flex;gap:6px;margin-top:8px}
+.ahorro-input-row input{flex:1;height:32px;border:1px solid var(--border);border-radius:var(--r);padding:0 8px;background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none}
+.ahorro-input-row input:focus{border-color:var(--purple)}
+.ahorro-save{height:32px;padding:0 10px;border:none;border-radius:var(--r);background:var(--purple-bg);color:var(--purple);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.ahorro-save:hover{opacity:.8}
+
+/* ── OBJETIVOS ── */
+.obj-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.obj-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:.9rem 1rem;box-shadow:var(--sh)}
+.obj-lbl{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.obj-row{display:flex;gap:6px;align-items:center}
+.obj-row input{flex:1;height:34px;border:1px solid var(--border);border-radius:var(--r);padding:0 9px;background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;outline:none}
+.obj-row input:focus{border-color:var(--amber)}
+.obj-save{height:34px;padding:0 12px;border:none;border-radius:var(--r);background:var(--amber-bg);color:var(--amber);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.progress-bar{height:6px;background:var(--surface2);border-radius:3px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s ease}
+
+/* ── TIPO TOGGLE ── */
+.tipo-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;width:fit-content;margin-bottom:12px}
+.tipo-btn{padding:6px 16px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
+.tipo-btn.a-efvo{background:var(--green-bg);color:var(--green)}
+.tipo-btn.a-tranf{background:var(--blue-bg);color:var(--blue)}
+
+/* ── FILTER ── */
+.filter-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.fbtn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
+.fbtn.active{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* ── LOADING ── */
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{text-align:center;padding:1.5rem;color:var(--text2);font-size:13px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:var(--r);font-size:13px;z-index:999;transition:transform .25s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── TABLET ── */
+@media(max-width:900px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .grid2{grid-template-columns:1fr}
+  .form-row.cols5{grid-template-columns:1fr 1fr 1fr}
+  .form-row.cols5 .btn-add{grid-column:span 3}
+}
+
+/* ── MOBILE ── */
+@media(max-width:600px){
+  .topbar{padding:0 .75rem;height:52px}
+  .brand{font-size:14px}
+  .brand-dot{width:28px;height:28px;font-size:14px}
+  .btn-sm{padding:5px 8px;font-size:12px}
+  .tabs-wrap{overflow-x:auto;padding:0 .5rem;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs-wrap::-webkit-scrollbar{display:none}
+  .tab-btn{padding:10px 12px;font-size:13px;white-space:nowrap}
+  .main{padding:1rem .75rem 5rem}
+  .mes-bar h2{font-size:18px}
+  .mes-lbl{font-size:13px;min-width:110px}
+  .metrics{grid-template-columns:1fr 1fr;gap:8px}
+  .mc{padding:.75rem .85rem}
+  .mc-val{font-size:18px}
+  .mc-lbl{font-size:10px}
+  .mc-sub{font-size:10px}
+  .grid2{grid-template-columns:1fr}
+  .ahorros-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .obj-grid{grid-template-columns:1fr}
+  .add-form{padding:.85rem}
+  .add-form-title{font-size:12px}
+  .form-row.cols4,.form-row.cols5,.form-row.cols3{grid-template-columns:1fr 1fr}
+  .form-row.cols4 .btn-add,.form-row.cols5 .btn-add,.form-row.cols3 .btn-add{grid-column:span 2;height:40px;font-size:14px}
+  .fgl label{font-size:10px}
+  .fgl input,.fgl select{height:38px;font-size:13px}
+  .tipo-toggle{width:100%;margin-bottom:10px}
+  .tipo-btn{flex:1;text-align:center;padding:7px 8px;font-size:12px}
+  .section-title{font-size:13px}
+  .item{padding:8px 10px;gap:8px}
+  .item-ico{width:30px;height:30px;font-size:15px;flex-shrink:0}
+  .item-name{font-size:13px}
+  .item-meta{font-size:11px}
+  .item-amt{font-size:13px}
+  .card{padding:.85rem}
+  .card-title{font-size:13px}
+  .chart-wrap{height:170px}
+  .modal-box{padding:1.25rem 1rem}
+  .modal-title{font-size:15px}
+  .auth-card{padding:2rem 1.25rem}
+  .user-pill{display:none}
+  .comp-badge{display:none}
+  /* tarjetas en móvil */
+  .tc-grid{grid-template-columns:1fr!important}
+  .anual-row{grid-template-columns:80px 1fr 1fr 1fr!important}
+}
+
+/* Safe area iPhone */
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .main{padding-bottom:calc(3rem + env(safe-area-inset-bottom))}
+  .topbar{padding-top:env(safe-area-inset-top)}
+}
+</style>
+</head>
+<body>
+
+<!-- ── AUTH ── -->
+<div class="auth-wrap" id="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo"><img src="/icon-192.png" style="width:36px;height:36px;object-fit:contain"/></div>
+    <div class="auth-title">Mis Finanzas</div>
+    <div class="auth-sub">Control personal de ingresos y gastos</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Iniciar sesión</button>
+      <button class="auth-tab" onclick="switchTab('register')">Registrarme</button>
+    </div>
+    <div class="fg"><label>Email</label><input type="email" id="a-email" placeholder="tu@email.com"/></div>
+    <div class="fg"><label>Contraseña</label><input type="password" id="a-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"/></div>
+    <button class="btn-main" id="a-btn" onclick="doAuth()">Iniciar sesión</button>
+    <div class="auth-msg" id="a-msg"></div>
+    <button class="auth-link" id="forgot-btn" onclick="showForgot()">¿Olvidaste tu contraseña?</button>
+    <div id="forgot-panel" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:10px">Ingresá tu email y te enviamos un link para resetear tu contraseña.</div>
+      <div class="fg"><label>Email</label><input type="email" id="forgot-email" placeholder="tu@email.com"/></div>
+      <button class="btn-main" onclick="doForgot()" style="background:var(--purple)">Enviar link de recuperación</button>
+      <div class="auth-msg" id="forgot-msg"></div>
+      <button class="auth-link" onclick="hideForgot()">← Volver al login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand"><div class="brand-dot"><img src="/icon-192.png" style="width:22px;height:22px;object-fit:contain"/></div>Mis Finanzas</div>
+    <div class="topbar-r">
+      <span class="user-pill" id="user-pill"></span>
+      <button class="btn-sm" onclick="exportPDF()">⬇ PDF</button>
+      <button class="btn-sm" id="btn-cerrar-mes-top" onclick="toggleMesCerrado(true)" style="color:var(--red)">🔒 Cerrar mes</button>
+      <button class="btn-sm" onclick="abrirModalPass()">🔑 Contraseña</button>
+      <button class="btn-sm" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs-wrap">
+    <!-- Banner mes cerrado -->
+    <div id="banner-mes-cerrado" style="display:none;padding:.5rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border)">
+      <div class="mes-cerrado-banner">
+        <div class="mes-cerrado-txt">🔒 <strong>Este mes está cerrado.</strong> No podés agregar ni editar movimientos.</div>
+        <button class="btn-abrir-mes" onclick="toggleMesCerrado(false)">🔓 Reabrir mes</button>
+      </div>
+    </div>
+    <button class="tab-btn active" onclick="showTab('resumen',this)">Resumen</button>
+    <button class="tab-btn" onclick="showTab('ingresos',this)">Ingresos</button>
+    <button class="tab-btn" onclick="showTab('gastos-personal',this)">Gastos Personales</button>
+    <button class="tab-btn" onclick="showTab('gastos-easy',this)">Gastos Easy Move</button>
+    <button class="tab-btn" onclick="showTab('ahorros',this)">Ahorros</button>
+    <button class="tab-btn" onclick="showTab('deudas',this)">Deudas</button>
+    <button class="tab-btn" onclick="showTab('anual',this)">Resumen Anual</button>
+    <button class="tab-btn" onclick="showTab('tarjetas',this)">💳 Tarjetas</button>
+    <button class="tab-btn" onclick="showTab('fijos',this)">Gastos Fijos</button>
+    <button class="tab-btn" onclick="showTab('buscador',this)">🔍 Buscar</button>
+    <button class="tab-btn" onclick="showTab('importar',this)">📥 Importar</button>
+  </div>
+
+  <div class="main">
+    <!-- MES -->
+    <div class="mes-bar">
+      <h2 id="mes-h2">Mayo 2026</h2>
+      <div class="mes-btns">
+        <button class="mes-btn" onclick="cambiarMes(-1)">&#8249;</button>
+        <span class="mes-lbl" id="mes-lbl">Mayo 2026</span>
+        <button class="mes-btn" onclick="cambiarMes(1)">&#8250;</button>
+      </div>
+    </div>
+
+    <!-- ════ TAB: RESUMEN ════ -->
+    <div id="tab-resumen">
+      <div class="metrics" id="metrics-top">
+        <div class="mc m-green">
+          <div class="mc-lbl">📥 Ingresos totales <span id="comp-ing" class="comp-badge comp-same" style="display:none"></span></div>
+          <div class="mc-val green" id="m-ing">$0</div>
+          <div class="mc-sub" id="m-ing-s">Efectivo + transferencia</div>
+        </div>
+        <div class="mc m-red">
+          <div class="mc-lbl">📤 Gastos personales <span id="comp-gp" class="comp-badge comp-same" style="display:none"></span></div>
+          <div class="mc-val red" id="m-gp">$0</div>
+          <div class="mc-sub" id="m-gp-s">0 movimientos</div>
+        </div>
+        <div class="mc m-blue">
+          <div class="mc-lbl">🚚 Gastos Easy Move <span id="comp-ge" class="comp-badge comp-same" style="display:none"></span></div>
+          <div class="mc-val blue" id="m-ge">$0</div>
+          <div class="mc-sub" id="m-ge-s">0 movimientos</div>
+        </div>
+        <div class="mc m-amber">
+          <div class="mc-lbl">⚖️ Balance neto <span id="comp-bal" class="comp-badge comp-same" style="display:none"></span></div>
+          <div class="mc-val gray" id="m-bal">$0</div>
+          <div class="mc-sub" id="m-bal-s">vs mes anterior</div>
+        </div>
+      </div>
+
+      <!-- Objetivos del mes -->
+      <div class="section-title">🎯 Objetivos del mes</div>
+      <div class="obj-grid" id="obj-grid">
+        <div class="obj-card">
+          <div class="obj-lbl">Meta de ingresos</div>
+          <div class="obj-row">
+            <input type="number" id="obj-ing" placeholder="Ej: 70000" onchange="saveObjetivo('ing')"/>
+            <button class="obj-save" onclick="saveObjetivo('ing')">Guardar</button>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="prog-ing" style="background:var(--green-light);width:0%"></div></div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px" id="prog-ing-lbl"></div>
+        </div>
+        <div class="obj-card">
+          <div class="obj-lbl">Renta / Alquiler fijo</div>
+          <div class="obj-row">
+            <input type="number" id="obj-renta" placeholder="Ej: 3750" onchange="saveObjetivo('renta')"/>
+            <button class="obj-save" onclick="saveObjetivo('renta')">Guardar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Distribución del mes</div>
+          <div class="chart-wrap"><canvas id="chart-dona"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Ingresos por día (top 10)</div>
+          <div class="chart-wrap"><canvas id="chart-ing-dia"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Resumen ahorros -->
+      <div class="section-title">💰 Ahorros acumulados este mes</div>
+      <div class="ahorros-grid">
+        <div class="ahorro-card">
+          <div class="ahorro-lbl">🏦 Pesos</div>
+          <div class="ahorro-val" id="r-ah-pesos">$0</div>
+        </div>
+        <div class="ahorro-card">
+          <div class="ahorro-lbl">💵 Dólares</div>
+          <div class="ahorro-val" id="r-ah-dolares">USD 0</div>
+        </div>
+        <div class="ahorro-card">
+          <div class="ahorro-lbl">💳 Tarjetas</div>
+          <div class="ahorro-val" id="r-ah-tarjetas">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ TAB: INGRESOS ════ -->
+    <div id="tab-ingresos" style="display:none">
+      <div class="add-form">
+        <div class="add-form-title">+ Agregar ingreso</div>
+        <div class="tipo-toggle">
+          <button class="tipo-btn a-efvo" id="ing-efvo-btn" onclick="setIngTipo('efvo')">💵 Efectivo</button>
+          <button class="tipo-btn" id="ing-tranf-btn" onclick="setIngTipo('tranf')">🏦 Transferencia</button>
+        </div>
+        <div class="form-row cols5">
+          <div class="fgl"><label>Fecha</label><input type="date" id="ing-fecha"/></div>
+          <div class="fgl"><label>Fuente</label>
+            <select id="ing-fuente">
+              <option value="Fletes">🚚 Fletes</option>
+              <option value="Otros">📦 Otros</option>
+            </select>
+          </div>
+          <div class="fgl"><label>Descripción</label><input type="text" id="ing-desc" placeholder="Opcional"/></div>
+          <div class="fgl"><label>Monto ($)</label><input type="number" id="ing-monto" placeholder="0.00" min="0" step="0.01"/></div>
+          <button class="btn-add" id="ing-add-btn" onclick="addIngreso()">+ Agregar</button>
+        </div>
+      </div>
+
+      <!-- Subtotales -->
+      <div class="metrics" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.25rem">
+        <div class="mc m-green"><div class="mc-lbl">🚚 Fletes Efectivo</div><div class="mc-val green" id="si-fle-efvo">$0</div></div>
+        <div class="mc m-blue"><div class="mc-lbl">🏦 Fletes Transf.</div><div class="mc-val blue" id="si-fle-tranf">$0</div></div>
+        <div class="mc m-green"><div class="mc-lbl">📦 Otros Efectivo</div><div class="mc-val green" id="si-ot-efvo">$0</div></div>
+        <div class="mc m-blue"><div class="mc-lbl">🏦 Otros Transf.</div><div class="mc-val blue" id="si-ot-tranf">$0</div></div>
+      </div>
+
+      <div class="section-title">Todos los ingresos <span id="ing-cnt"></span></div>
+      <div class="filter-row">
+        <button class="fbtn active" onclick="setFiltroIng('all',this)">Todos</button>
+        <button class="fbtn" onclick="setFiltroIng('Fletes',this)">🚚 Fletes</button>
+        <button class="fbtn" onclick="setFiltroIng('Otros',this)">📦 Otros</button>
+        <button class="fbtn" onclick="setFiltroIng('efvo',this)">💵 Efectivo</button>
+        <button class="fbtn" onclick="setFiltroIng('tranf',this)">🏦 Transf.</button>
+      </div>
+      <div class="items-list" id="ing-list"></div>
+    </div>
+
+    <!-- ════ TAB: GASTOS PERSONALES ════ -->
+    <div id="tab-gastos-personal" style="display:none">
+      <div class="add-form">
+        <div class="add-form-title">+ Agregar gasto personal</div>
+        <div class="form-row cols5">
+          <div class="fgl"><label>Fecha</label><input type="date" id="gp-fecha"/></div>
+          <div class="fgl"><label>Descripción</label><input type="text" id="gp-desc" placeholder="Ej: Supermercado, Helado..."/></div>
+          <div class="fgl"><label>Categoría</label>
+            <select id="gp-cat">
+              <option value="Comida y bebida">🍴 Comida y bebida</option>
+              <option value="Supermercado">🛒 Supermercado</option>
+              <option value="Transporte">🚗 Transporte</option>
+              <option value="Alquiler / Renta">🏡 Alquiler / Renta</option>
+              <option value="Servicios">⚡ Servicios</option>
+              <option value="Salud">❤️ Salud</option>
+              <option value="Entretenimiento">🎬 Entretenimiento</option>
+              <option value="Ropa">👕 Ropa</option>
+              <option value="Tarjetas">💳 Tarjetas</option>
+              <option value="Transferencias">💸 Transferencias</option>
+              <option value="Suscripciones">🔄 Suscripciones</option>
+              <option value="Varios">📦 Varios</option>
+            </select>
+          </div>
+          <div class="fgl"><label>Monto ($)</label><input type="number" id="gp-monto" placeholder="0.00" min="0" step="0.01"/></div>
+          <button class="btn-add red" onclick="addGastoPersonal()">+ Agregar</button>
+        </div>
+      </div>
+
+      <div class="section-title">Gastos personales <span id="gp-cnt"></span></div>
+      <div class="filter-row" id="gp-filters"></div>
+      <div class="items-list" id="gp-list"></div>
+    </div>
+
+    <!-- ════ TAB: GASTOS EASY MOVE ════ -->
+    <div id="tab-gastos-easy" style="display:none">
+      <div class="add-form">
+        <div class="add-form-title">+ Agregar gasto Easy Move</div>
+        <div class="form-row cols5">
+          <div class="fgl"><label>Fecha</label><input type="date" id="ge-fecha"/></div>
+          <div class="fgl"><label>Descripción</label><input type="text" id="ge-desc" placeholder="Ej: Cuota camión, Gasolina..."/></div>
+          <div class="fgl"><label>Categoría</label>
+            <select id="ge-cat">
+              <option value="Cuota camión">🚚 Cuota camión</option>
+              <option value="Gasolina">⛽ Gasolina</option>
+              <option value="Mecánico / Repuestos">🔧 Mecánico / Repuestos</option>
+              <option value="Publicidad">📣 Publicidad</option>
+              <option value="Línea telefónica">📱 Línea telefónica</option>
+              <option value="Pago empleados">👷 Pago empleados</option>
+              <option value="Alquiler local">🏢 Alquiler local</option>
+              <option value="Transferencias">💸 Transferencias</option>
+              <option value="Tarjetas">💳 Tarjetas</option>
+              <option value="Varios Easy Move">📦 Varios Easy Move</option>
+            </select>
+          </div>
+          <div class="fgl"><label>Monto ($)</label><input type="number" id="ge-monto" placeholder="0.00" min="0" step="0.01"/></div>
+          <button class="btn-add blue" onclick="addGastoEasy()">+ Agregar</button>
+        </div>
+      </div>
+
+      <div class="section-title">Gastos Easy Move <span id="ge-cnt"></span></div>
+      <div class="filter-row" id="ge-filters"></div>
+      <div class="items-list" id="ge-list"></div>
+    </div>
+
+    <!-- ════ TAB: AHORROS ════ -->
+    <div id="tab-ahorros" style="display:none">
+      <div class="section-title">💰 Ahorros del mes</div>
+      <div class="ahorros-grid">
+        <div class="ahorro-card">
+          <div class="ahorro-lbl">🏦 Pesos</div>
+          <div class="ahorro-val" id="ah-pesos-val">$0</div>
+          <div class="ahorro-input-row">
+            <input type="number" id="ah-pesos-inp" placeholder="Monto en pesos" step="0.01"/>
+            <button class="ahorro-save" onclick="saveAhorro('pesos')">Guardar</button>
+          </div>
+        </div>
+        <div class="ahorro-card">
+          <div class="ahorro-lbl">💵 Dólares</div>
+          <div class="ahorro-val" id="ah-dolares-val">USD 0</div>
+          <div class="ahorro-input-row">
+            <input type="number" id="ah-dolares-inp" placeholder="Monto en dólares" step="0.01"/>
+            <button class="ahorro-save" onclick="saveAhorro('dolares')">Guardar</button>
+          </div>
+        </div>
+        <div class="ahorro-card">
+          <div class="ahorro-lbl">💳 Tarjetas</div>
+          <div class="ahorro-val" id="ah-tarjetas-val">$0</div>
+          <div class="ahorro-input-row">
+            <input type="number" id="ah-tarjetas-inp" placeholder="Monto en tarjetas" step="0.01"/>
+            <button class="ahorro-save" onclick="saveAhorro('tarjetas')">Guardar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:8px">
+        <div class="card-title">📊 Historial de ahorros (últimos 6 meses)</div>
+        <div class="chart-wrap"><canvas id="chart-ahorros"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ════ TAB: DEUDAS ════ -->
+    <div id="tab-deudas" style="display:none">
+      <div class="add-form">
+        <div class="add-form-title">+ Registrar deuda</div>
+        <div class="tipo-toggle" style="margin-bottom:12px">
+          <button class="tipo-btn a-efvo" id="deuda-me-btn" onclick="setDeudaTipo('me_deben')">💚 Me deben</button>
+          <button class="tipo-btn" id="deuda-debo-btn" onclick="setDeudaTipo('debo')">🔴 Debo</button>
+        </div>
+        <div class="form-row cols5">
+          <div class="fgl"><label>Persona</label><input type="text" id="deuda-persona" placeholder="Nombre..."/></div>
+          <div class="fgl"><label>Descripción</label><input type="text" id="deuda-desc" placeholder="¿Por qué?"/></div>
+          <div class="fgl"><label>Fecha</label><input type="date" id="deuda-fecha"/></div>
+          <div class="fgl"><label>Monto ($)</label><input type="number" id="deuda-monto" placeholder="0.00" min="0" step="0.01"/></div>
+          <button class="btn-add" id="deuda-add-btn" onclick="addDeuda()" style="background:var(--green)">+ Agregar</button>
+        </div>
+      </div>
+      <div class="metrics" style="grid-template-columns:1fr 1fr;margin-bottom:1.25rem">
+        <div class="mc m-green"><div class="mc-lbl">💚 Total que me deben</div><div class="mc-val green" id="d-me-deben">$0</div><div class="mc-sub" id="d-me-deben-s">0 deudas</div></div>
+        <div class="mc m-red"><div class="mc-lbl">🔴 Total que debo</div><div class="mc-val red" id="d-debo">$0</div><div class="mc-sub" id="d-debo-s">0 deudas</div></div>
+      </div>
+      <div class="section-title">Deudas <span id="deudas-cnt"></span></div>
+      <div class="filter-row">
+        <button class="fbtn active" onclick="setFiltroDeudas('all',this)">Todas</button>
+        <button class="fbtn" onclick="setFiltroDeudas('me_deben',this)">💚 Me deben</button>
+        <button class="fbtn" onclick="setFiltroDeudas('debo',this)">🔴 Debo</button>
+        <button class="fbtn" onclick="setFiltroDeudas('pendiente',this)">⏳ Pendientes</button>
+        <button class="fbtn" onclick="setFiltroDeudas('pagada',this)">✅ Saldadas</button>
+      </div>
+      <div class="items-list" id="deudas-list"></div>
+    </div>
+
+    <!-- ════ TAB: ANUAL ════ -->
+    <div id="tab-anual" style="display:none">
+      <div class="section-title" style="margin-bottom:1rem">📅 Resumen <span id="anual-ano-lbl"></span></div>
+      <div class="metrics" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.25rem">
+        <div class="mc m-green"><div class="mc-lbl">📥 Ingresos del año</div><div class="mc-val green" id="a-ing-total">$0</div></div>
+        <div class="mc m-red"><div class="mc-lbl">📤 Gastos del año</div><div class="mc-val red" id="a-gas-total">$0</div></div>
+        <div class="mc m-amber"><div class="mc-lbl">⚖️ Balance del año</div><div class="mc-val gray" id="a-bal-total">$0</div></div>
+      </div>
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-title">Ingresos vs Gastos por mes</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="chart-anual"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Detalle por mes</div>
+        <div id="anual-tabla"></div>
+      </div>
+    </div>
+
+    <!-- ════ TAB: TARJETAS ════ -->
+    <div id="tab-tarjetas" style="display:none">
+
+      <!-- CONFIGURAR TARJETAS -->
+      <div class="add-form">
+        <div class="add-form-title">💳 Configurar tarjeta</div>
+        <div class="form-row cols5">
+          <div class="fgl"><label>Nombre</label><input type="text" id="tc-nombre" placeholder="Ej: Nu, Klar, BBVA..."/></div>
+          <div class="fgl"><label>Banco / Emisor</label><input type="text" id="tc-banco" placeholder="Ej: Nu Bank..."/></div>
+          <div class="fgl"><label>Día de cierre</label><input type="number" id="tc-cierre" placeholder="Ej: 15" min="1" max="31"/></div>
+          <div class="fgl"><label>Día límite pago</label><input type="number" id="tc-limite" placeholder="Ej: 5" min="1" max="31"/></div>
+          <button class="btn-add" onclick="addTarjeta()" style="background:var(--purple)">+ Guardar</button>
+        </div>
+      </div>
+
+      <!-- RESUMEN MÉTRICAS -->
+      <div class="metrics" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.25rem">
+        <div class="mc m-red"><div class="mc-lbl">💳 Total acumulado</div><div class="mc-val red" id="tc-total">$0</div><div class="mc-sub" id="tc-total-s">0 tarjetas</div></div>
+        <div class="mc m-red" style="border-color:rgba(244,63,94,.6)"><div class="mc-lbl">🔥 Vence este mes</div><div class="mc-val red" id="tc-este-mes">$0</div><div class="mc-sub" id="tc-este-mes-s">0 tarjetas</div></div>
+        <div class="mc m-amber"><div class="mc-lbl">📅 Mes que viene</div><div class="mc-val amber" id="tc-pronto">$0</div><div class="mc-sub" id="tc-pronto-s">0 tarjetas</div></div>
+        <div class="mc m-green"><div class="mc-lbl">✅ Ya pagadas</div><div class="mc-val green" id="tc-pagadas">$0</div><div class="mc-sub" id="tc-pagadas-s">0 tarjetas</div></div>
+      </div>
+
+      <!-- CARDS DE TARJETAS -->
+      <div class="section-title">Mis tarjetas <span id="tc-cnt"></span>
+        <button class="btn-sm" onclick="mostrarFormGastoTC()" style="font-size:12px">+ Cargar gasto con tarjeta</button>
+      </div>
+
+      <!-- FORM CARGAR GASTO CON TARJETA -->
+      <div id="form-gasto-tc" class="add-form" style="display:none;border:1px solid var(--purple);margin-bottom:1rem">
+        <div class="add-form-title" style="color:var(--purple)">💸 Cargar gasto realizado con tarjeta</div>
+        <div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr auto">
+          <div class="fgl"><label>Fecha del cargo</label><input type="date" id="tc-gasto-fecha"/></div>
+          <div class="fgl"><label>Tarjeta</label><select id="tc-gasto-tarjeta"></select></div>
+          <div class="fgl"><label>Descripción</label><input type="text" id="tc-gasto-desc" placeholder="Ej: Supermercado..."/></div>
+          <div class="fgl"><label>Categoría</label>
+            <select id="tc-gasto-cat">
+              <option value="Comida y bebida">🍴 Comida y bebida</option>
+              <option value="Supermercado">🛒 Supermercado</option>
+              <option value="Ropa">👕 Ropa</option>
+              <option value="Salud">❤️ Salud</option>
+              <option value="Entretenimiento">🎬 Entretenimiento</option>
+              <option value="Suscripciones">🔄 Suscripciones</option>
+              <option value="Servicios">⚡ Servicios</option>
+              <option value="Transporte">🚗 Transporte</option>
+              <option value="Varios">📦 Varios</option>
+            </select>
+          </div>
+          <div class="fgl"><label>Monto total ($)</label><input type="number" id="tc-gasto-monto" placeholder="0.00" min="0" step="0.01"/></div>
+          <button class="btn-add" onclick="addGastoTarjeta()" style="background:var(--purple)">+ Cargar</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="tc-cuotas-check" onchange="toggleCuotas()" style="width:16px;height:16px;accent-color:var(--purple)"/>
+            <span style="color:var(--text2)">💳 Es una compra en cuotas</span>
+          </label>
+          <div id="tc-cuotas-wrap" style="display:none;display:flex;align-items:center;gap:8px">
+            <div class="fgl" style="margin:0">
+              <input type="number" id="tc-cuotas-n" placeholder="Nº cuotas" min="2" max="48" style="height:32px;width:100px;border:1px solid var(--border);border-radius:var(--r);padding:0 8px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none" oninput="calcCuota()"/>
+            </div>
+            <div id="tc-cuota-preview" style="font-size:13px;color:var(--purple);font-weight:600"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <button class="fbtn active" onclick="setFiltroTC('all',this)">Todas</button>
+        <button class="fbtn" onclick="setFiltroTC('pendiente',this)">⏳ Pendientes</button>
+        <button class="fbtn" onclick="setFiltroTC('este_mes',this)">🔥 Vencen este mes</button>
+        <button class="fbtn" onclick="setFiltroTC('proximo_mes',this)">📅 Mes que viene</button>
+        <button class="fbtn" onclick="setFiltroTC('pagada',this)">✅ Pagadas</button>
+      </div>
+      <div class="tc-grid" id="tc-grid"></div>
+    </div>
+
+    <!-- ════ TAB: GASTOS FIJOS ════ -->
+    <div id="tab-fijos" style="display:none">
+      <div class="add-form">
+        <div class="add-form-title">📌 Agregar gasto fijo mensual</div>
+        <div class="form-row cols5">
+          <div class="fgl"><label>Descripción</label><input type="text" id="fijo-desc" placeholder="Ej: Renta, Netflix..."/></div>
+          <div class="fgl"><label>Tipo</label>
+            <select id="fijo-tipo">
+              <option value="personal">👤 Personal</option>
+              <option value="easy">🚚 Easy Move</option>
+            </select>
+          </div>
+          <div class="fgl"><label>Categoría</label><select id="fijo-cat"></select></div>
+          <div class="fgl"><label>Monto ($)</label><input type="number" id="fijo-monto" placeholder="0.00" min="0" step="0.01"/></div>
+          <button class="btn-add amber" onclick="addFijo()">+ Agregar</button>
+        </div>
+      </div>
+      <div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--r);padding:10px 14px;margin-bottom:1rem;font-size:13px;color:var(--amber)">
+        💡 Los gastos fijos se agregan automáticamente al inicio de cada mes cuando abrís la app.
+      </div>
+      <div class="section-title">Gastos fijos activos <span id="fijos-cnt"></span></div>
+      <div class="items-list" id="fijos-list"></div>
+    </div>
+
+    <!-- ════ TAB: BUSCADOR ════ -->
+    <div id="tab-buscador" style="display:none">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="buscar-input" placeholder="Buscá por descripción, categoría o monto..." oninput="buscar()"/>
+        <button class="search-clear" id="buscar-clear" onclick="limpiarBusqueda()">✕</button>
+      </div>
+      <div class="filter-row">
+        <button class="fbtn active" onclick="setBuscarFiltro('all',this)">Todo</button>
+        <button class="fbtn" onclick="setBuscarFiltro('ingresos',this)">Ingresos</button>
+        <button class="fbtn" onclick="setBuscarFiltro('personal',this)">Gastos Pers.</button>
+        <button class="fbtn" onclick="setBuscarFiltro('easy',this)">Gastos Easy</button>
+        <button class="fbtn" onclick="setBuscarFiltro('deudas',this)">Deudas</button>
+      </div>
+      <div class="section-title">Resultados <span id="buscar-cnt" style="color:var(--text3);font-weight:400"></span></div>
+      <div class="items-list" id="buscar-list">
+        <div class="empty">Escribí algo para buscar</div>
+      </div>
+    </div>
+
+    <!-- TAB IMPORTAR -->
+    <div id="tab-importar" style="display:none">
+      <div class="add-form" style="margin-bottom:1.25rem">
+        <div class="add-form-title">📥 Importar desde Excel / CSV</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6">
+          Guardar tu planilla de Excel como <strong>CSV</strong> y subila acá. Columnas requeridas:<br>
+          <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:12px;display:inline-block;margin-top:4px">Tipo | Fecha | Descripcion | Categoria | Monto | Forma de pago</code>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--r);padding:10px;margin-bottom:1rem;font-size:12px;color:var(--text2)">
+          <strong>Tipo:</strong> Ingreso, Gasto Personal, Gasto Easy Move &nbsp;·&nbsp;
+          <strong>Fecha:</strong> DD/MM/YYYY &nbsp;·&nbsp;
+          <strong>Forma de pago:</strong> Efectivo o Transferencia (solo para ingresos)
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:8px;background:var(--teal);color:#fff;padding:8px 16px;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:600">
+            📂 Seleccionar CSV
+            <input type="file" id="csv-input" accept=".csv,.txt" style="display:none" onchange="previewCSV(event)"/>
+          </label>
+          <button class="btn-add" onclick="descargarPlantilla()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">⬇ Plantilla de ejemplo</button>
+        </div>
+      </div>
+      <div id="csv-preview" style="display:none">
+        <div class="section-title" style="margin-bottom:10px">
+          Vista previa <span id="csv-preview-cnt" style="color:var(--text3);font-weight:400"></span>
+          <button class="btn-add" id="csv-import-btn" onclick="importarCSV()" style="background:var(--green)">✓ Importar todo</button>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:1rem;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse" id="csv-table"></table>
+        </div>
+        <div id="csv-errores" style="display:none;background:var(--red-bg);border:1px solid var(--red);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:1rem"></div>
+        <div id="csv-resultado" style="display:none"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ── MODAL CAMBIAR CONTRASEÑA ── -->
+<div class="modal-overlay" id="modal-pass" style="display:none" onclick="if(event.target===this)cerrarModalPass()">
+  <div class="modal-box">
+    <div class="modal-title">🔑 Cambiar contraseña <button class="modal-close" onclick="cerrarModalPass()">×</button></div>
+    <div class="fg"><label>Nueva contraseña</label><input type="password" id="new-pass" placeholder="Mínimo 6 caracteres"/></div>
+    <div class="fg"><label>Confirmar contraseña</label><input type="password" id="new-pass2" placeholder="Repetí la contraseña"/></div>
+    <div class="auth-msg" id="pass-msg"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModalPass()">Cancelar</button>
+      <button class="btn-save" id="pass-save-btn" onclick="cambiarPass()">Guardar contraseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL EDITAR ITEM ── -->
+<div class="modal-overlay" id="modal-edit" style="display:none" onclick="if(event.target===this)cerrarModalEdit()">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-edit-title">✏️ Editar <button class="modal-close" onclick="cerrarModalEdit()">×</button></div>
+    <div class="fg"><label>Descripción</label><input type="text" id="edit-desc" placeholder="Descripción"/></div>
+    <div class="fg" id="edit-cat-wrap"><label>Categoría</label><select id="edit-cat"></select></div>
+    <div class="fg" id="edit-fecha-wrap"><label>Fecha</label><input type="date" id="edit-fecha"/></div>
+    <div class="fg" id="edit-tipo-wrap"><label>Tipo</label>
+      <select id="edit-tipo">
+        <option value="efvo">💵 Efectivo</option>
+        <option value="tranf">🏦 Transferencia</option>
+      </select>
+    </div>
+    <div class="fg" id="edit-fuente-wrap"><label>Fuente</label>
+      <select id="edit-fuente">
+        <option value="Fletes">🚚 Fletes</option>
+        <option value="Otros">📦 Otros</option>
+      </select>
+    </div>
+    <div class="fg"><label>Monto ($)</label><input type="number" id="edit-monto" placeholder="0.00" min="0" step="0.01"/></div>
+    <div class="auth-msg" id="edit-msg"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModalEdit()">Cancelar</button>
+      <button class="btn-save" id="edit-save-btn" onclick="guardarEdit()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SURL='https://mouhoqowshkhduiaiqlv.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vdWhvcW93c2hraGR1aWFpcWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3ODkyOTQsImV4cCI6MjA5NDM2NTI5NH0.MvF2EZzp81drmpy0nTcFoerqgDIYoxlb_sH6v_0K8Vs';
+const sb=supabase.createClient(SURL,SKEY);
+
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const CAT_ICONS_GP={'Comida y bebida':'🍴','Supermercado':'🛒','Transporte':'🚗','Alquiler / Renta':'🏡','Servicios':'⚡','Salud':'❤️','Entretenimiento':'🎬','Ropa':'👕','Tarjetas':'💳','Transferencias':'💸','Suscripciones':'🔄','Varios':'📦'};
+const CAT_ICONS_GE={'Cuota camión':'🚚','Gasolina':'⛽','Mecánico / Repuestos':'🔧','Publicidad':'📣','Línea telefónica':'📱','Pago empleados':'👷','Alquiler local':'🏢','Transferencias':'💸','Tarjetas':'💳','Varios Easy Move':'📦'};
+
+let uid=null, ano=new Date().getFullYear(), mes=new Date().getMonth();
+let ingresos=[], gastosP=[], gastosE=[], ahorros={pesos:0,dolares:0,tarjetas:0}, objetivos={ing:0,renta:0};
+let ingTipo='efvo', filtroIng='all', filtroGP='all', filtroGE='all';
+let chartDona=null, chartIngDia=null, chartAhorros=null;
+let tabActual='resumen';
+
+// ── UTILS ──
+function fmt(n){return'$'+Math.abs(Math.round(n)).toLocaleString('es-MX');}
+function fmtD(n){return'$'+Math.abs(n).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+function hoy(){return new Date().toISOString().split('T')[0];}
+
+// ── AUTH ──
+let tabMode='login';
+function switchTab(m){
+  tabMode=m;
+  document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList.toggle('active',(m==='login'&&i===0)||(m==='register'&&i===1)));
+  document.getElementById('a-btn').textContent=m==='login'?'Iniciar sesión':'Crear cuenta';
+  document.getElementById('a-msg').textContent='';
+}
+async function doAuth(){
+  const email=document.getElementById('a-email').value.trim();
+  const pass=document.getElementById('a-pass').value;
+  const msg=document.getElementById('a-msg');
+  const btn=document.getElementById('a-btn');
+  if(!email||!pass){msg.className='auth-msg err';msg.textContent='Completá email y contraseña.';return;}
+  btn.disabled=true;btn.textContent='Cargando...';msg.textContent='';
+  try{
+    const r=tabMode==='login'?await sb.auth.signInWithPassword({email,password:pass}):await sb.auth.signUp({email,password:pass});
+    if(r.error){msg.className='auth-msg err';msg.textContent=r.error.message.includes('Invalid')?'Email o contraseña incorrectos.':r.error.message;}
+    else if(tabMode==='register'&&!r.data.session){msg.className='auth-msg ok';msg.textContent='✓ Revisá tu email para confirmar.';}
+  }catch(e){msg.className='auth-msg err';msg.textContent='Error de conexión.';}
+  btn.disabled=false;btn.textContent=tabMode==='login'?'Iniciar sesión':'Crear cuenta';
+}
+async function doLogout(){await sb.auth.signOut();}
+
+sb.auth.onAuthStateChange((_,session)=>{
+  if(session){
+    uid=session.user.id;
+    document.getElementById('auth-wrap').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-pill').textContent=session.user.email;
+    document.getElementById('ing-fecha').value=hoy();
+  document.getElementById('gp-fecha').value=hoy();
+  document.getElementById('ge-fecha').value=hoy();
+    actualizarLabels();cargarTodo();
+  }else{
+    uid=null;
+    document.getElementById('auth-wrap').style.display='flex';
+    document.getElementById('app').style.display='none';
+  }
+});
+
+// ── MES ──
+function cambiarMes(d){mes+=d;if(mes>11){mes=0;ano++;}if(mes<0){mes=11;ano--;}actualizarLabels();cargarTodo();}
+function actualizarLabels(){const l=MESES[mes]+' '+ano;document.getElementById('mes-h2').textContent=l;document.getElementById('mes-lbl').textContent=l;}
+
+// ── TABS ──
+function showTab(name,el){
+  tabActual=name;
+  ['resumen','ingresos','gastos-personal','gastos-easy','ahorros','deudas','anual','tarjetas','fijos','buscador','importar'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===name?'block':'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  if(name==='ahorros')renderChartAhorros();
+  if(name==='anual')cargarAnual();
+  if(name==='deudas'){cargarDeudas();document.getElementById('deuda-fecha').value=hoy();}
+  if(name==='tarjetas')cargarTarjetas();
+  if(name==='fijos')cargarFijos();
+  if(name==='buscador')iniciarBuscador();
+  if(name==='importar'){csvRows=[];document.getElementById('csv-preview').style.display='none';}
+}
+
+// ── CARGA ──
+async function cargarTodo(){
+  if(!uid)return;
+  // ingresos
+  let{data:d1}=await sb.from('ingresos_personal').select('*').eq('uid',uid).eq('ano',ano).eq('mes',mes).order('fecha',{ascending:true});
+  ingresos=d1||[];
+  // gastos personales
+  let{data:d2}=await sb.from('gastos_personal').select('*').eq('uid',uid).eq('ano',ano).eq('mes',mes).order('created_at',{ascending:false});
+  gastosP=d2||[];
+  // gastos easy
+  let{data:d3}=await sb.from('gastos_easy').select('*').eq('uid',uid).eq('ano',ano).eq('mes',mes).order('created_at',{ascending:false});
+  gastosE=d3||[];
+  // ahorros
+  let{data:d4}=await sb.from('ahorros_personal').select('*').eq('uid',uid).eq('ano',ano).eq('mes',mes).single();
+  ahorros=d4?{pesos:Number(d4.pesos)||0,dolares:Number(d4.dolares)||0,tarjetas:Number(d4.tarjetas)||0}:{pesos:0,dolares:0,tarjetas:0};
+  // objetivos
+  let{data:d5}=await sb.from('objetivos_personal').select('*').eq('uid',uid).eq('ano',ano).eq('mes',mes).single();
+  objetivos=d5?{ing:Number(d5.ing)||0,renta:Number(d5.renta)||0}:{ing:0,renta:0};
+  renderTodo();
+  verificarMesCerrado();
+}
+
+function renderTodo(){
+  renderMetrics();renderIngresos();renderGastosP();renderGastosE();renderResumen();renderObjetivos();renderAhorrosTab();
+  cargarComparacion();
+  mostrarAlertasTarjetas();
+}
+
+function mostrarAlertasTarjetas(){
+  const oldB=document.getElementById('banner-tarjetas');if(oldB)oldB.remove();
+  if(!tarjetas||!tarjetas.length)return;
+  const hoyA=new Date();hoyA.setHours(0,0,0,0);
+  const mesA=hoyA.getMonth(), anoA=hoyA.getFullYear();
+  let mesSigA=mesA+1, anoSigA=anoA;
+  if(mesSigA>11){mesSigA=0;anoSigA++;}
+  const alertasEsteMes=[], alertasProximo=[];
+
+  tarjetas.forEach(function(tc){
+    const gastosPend=gastosTarjeta?gastosTarjeta.filter(function(g){return g.tarjeta_id===tc.id&&g.estado!=='pagado';}):[];
+    if(!gastosPend.length)return;
+    var totalEsteMes=0, totalProximo=0;
+    gastosPend.forEach(function(g){
+      const p=calcularPeriodoGasto(g.fecha,tc.dia_cierre,tc.dia_limite);
+      if(p.mesPago===mesA&&p.anoPago===anoA) totalEsteMes+=Number(g.monto);
+      else if(p.mesPago===mesSigA&&p.anoPago===anoSigA) totalProximo+=Number(g.monto);
+    });
+    const limiteEsteMes=new Date(anoA,mesA,tc.dia_limite);
+    if(limiteEsteMes<hoyA)limiteEsteMes.setMonth(limiteEsteMes.getMonth()+1);
+    const dias=Math.round((limiteEsteMes-hoyA)/(1000*60*60*24));
+    if(totalEsteMes>0)alertasEsteMes.push({nombre:tc.nombre,total:totalEsteMes,dias:dias,dia:tc.dia_limite});
+    else if(totalProximo>0&&dias<=10)alertasProximo.push({nombre:tc.nombre,total:totalProximo,dias:dias,dia:tc.dia_limite});
+  });
+
+  if(!alertasEsteMes.length&&!alertasProximo.length)return;
+  const banner=document.createElement('div');
+  banner.id='banner-tarjetas';
+  let html='';
+  if(alertasEsteMes.length){
+    const urgente=alertasEsteMes.some(function(a){return a.dias<=3;});
+    banner.style.cssText='background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.5);border-radius:var(--r);padding:12px 16px;margin-bottom:1rem;font-size:13px;color:var(--text)';
+    html+='<div style="font-weight:700;margin-bottom:8px;color:var(--red)">🔥 Pagos de tarjeta este mes:</div>';
+    alertasEsteMes.forEach(function(a){
+      const urg=a.dias<=3;
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(244,63,94,.15)">'+
+        '<span>'+(urg?'🚨':'⏰')+' <strong>'+a.nombre+'</strong> — '+fmt(a.total)+'</span>'+
+        '<span style="font-weight:700;color:'+(urg?'var(--red)':'var(--amber)')+'">'+
+        (a.dias===0?'¡Vence HOY!':a.dias===1?'¡Mañana!':'En '+a.dias+' días (día '+a.dia+')')+'</span></div>';
+    });
+  }
+  if(alertasProximo.length){
+    if(!alertasEsteMes.length)banner.style.cssText='background:var(--amber-bg);border:1px solid rgba(245,158,11,.4);border-radius:var(--r);padding:12px 16px;margin-bottom:1rem;font-size:13px;color:var(--amber)';
+    if(html)html+='<div style="height:6px"></div>';
+    html+='<div style="font-weight:700;margin-bottom:4px;color:var(--amber)">💳 Próximos pagos:</div>';
+    alertasProximo.forEach(function(a){html+='<div>• '+a.nombre+': '+fmt(a.total)+' — en '+a.dias+' días (día '+a.dia+')</div>';});
+  }
+  banner.innerHTML=html;
+  const main=document.querySelector('.main');
+  const mesBar=document.querySelector('.mes-bar');
+  if(main&&mesBar)main.insertBefore(banner,mesBar.nextSibling);
+}
