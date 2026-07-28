@@ -67,7 +67,7 @@ export default function AlertBanners() {
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(244,63,94,.15)' }}>
                     <span>{urg ? '🚨' : '⏰'} <strong>{a.nombre}</strong> — {fmt(a.total)}</span>
                     <span style={{ fontWeight: 700, color: urg ? 'var(--red)' : 'var(--amber)' }}>
-                      {a.dias === 0 ? 'Vence HOY' : a.dias === 1 ? 'Mañana' : `En ${a.dias} días (día ${a.dia})`}
+                      {a.dias < 0 ? `Vencido hace ${Math.abs(a.dias)} día${Math.abs(a.dias) !== 1 ? 's' : ''} (día ${a.dia})` : a.dias === 0 ? 'Vence HOY' : a.dias === 1 ? 'Mañana' : `En ${a.dias} días (día ${a.dia})`}
                     </span>
                   </div>
                 );
@@ -79,7 +79,7 @@ export default function AlertBanners() {
               {alertasTarjetas.esteMes.length > 0 && <div style={{ height: 6 }} />}
               <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--amber)' }}>Próximos pagos (mes que viene):</div>
               {alertasTarjetas.proximo.map((a, i) => (
-                <div key={i}>- {a.nombre}: {fmt(a.total)} en {a.dias} días (día {a.dia})</div>
+                <div key={i}>- {a.nombre}: {fmt(a.total)} {a.dias < 0 ? `(vencido, día ${a.dia})` : `en ${a.dias} días (día ${a.dia})`}</div>
               ))}
             </>
           )}
